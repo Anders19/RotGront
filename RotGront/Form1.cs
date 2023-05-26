@@ -7,12 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Data.SqlClient;
 
 namespace RotGront
 {
     public partial class RotoGrönt : Form
     {
-
+        SqlConnection con = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Users\Wowpojken\Documents\dbROG.mdf;Integrated Security=True;Connect Timeout=30");
+        SqlCommand cm = new SqlCommand();
         DataTable inventory = new DataTable();
         public RotoGrönt()
         {
@@ -28,6 +30,7 @@ namespace RotGront
             quantityTextBox.Text = "";
             descriptionTextBox.Text = "";
             categoryBox.SelectedIndex = -1;
+            dateTimePicker.Text = "";
         }
 
         private void saveButton_Click(object sender, EventArgs e)
@@ -38,9 +41,20 @@ namespace RotGront
             string quantity = quantityTextBox.Text;
             string description = descriptionTextBox.Text;
             string category = (string)categoryBox.SelectedItem;
+            string date = (string)dateTimePicker.Text;
+
+            cm = new SqlCommand("INSERT INTO [Table](id, name, quantity, description, category)VALUES(@id, @name, @quantity, @description, @category)",con);
+            cm.Parameters.AddWithValue("@id", IdTextBox.Text);
+            cm.Parameters.AddWithValue("@name", nameTextBox.Text);
+            cm.Parameters.AddWithValue("@quantity", quantityTextBox.Text);
+            cm.Parameters.AddWithValue("@description", descriptionTextBox.Text); 
+            cm.Parameters.AddWithValue("@category", categoryBox.Text);
+            con.Open();
+            cm.ExecuteNonQuery();
+            con.Close();
 
             //Lägg till värden
-            inventory.Rows.Add(id, name, quantity, description, category);
+            inventory.Rows.Add(id, name, quantity, description, category, date);
 
             //Rensa fält efter spara
             clearbutton_Click(sender, e);
@@ -69,6 +83,8 @@ namespace RotGront
 
                 String itemToLookFor = inventory.Rows[dataGridView.CurrentCell.RowIndex].ItemArray[5].ToString();
                 categoryBox.SelectedIndex = categoryBox.Items.IndexOf(itemToLookFor);
+
+                dateTimePicker.Text = inventory.Rows[dataGridView.CurrentCell.RowIndex].ItemArray[6].ToString();
             }
             catch (Exception err)
             {
@@ -83,6 +99,7 @@ namespace RotGront
             inventory.Columns.Add("Kategori");
             inventory.Columns.Add("Antal");
             inventory.Columns.Add("Beskrivning");
+            inventory.Columns.Add("Datum");
 
             dataGridView.DataSource= inventory;
         }
